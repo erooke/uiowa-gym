@@ -27,7 +27,7 @@ source=("makefile"
   "uiowa_gym.timer"
   "$pkgname")
 noextract=()
-md5sums=("221bd2a9a3734cc31d32603e0179fe10"
+md5sums=("295849935474da0ce66b867312f926be"
   "8a2bca2236ee1997fb977c1dfdc1d4a6"
   "9a003777990c9b7e372993c1b49524c2"
   "ff1f883392ba7f4edce9ad5dab71af30")
@@ -36,4 +36,3 @@ validpgpkeys=()
 package() {
 	make DESTDIR="$pkgdir/" install
 }
-  
