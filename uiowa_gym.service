@@ -1,0 +1,6 @@
+[Unit]
+Description=Automatically register for a gym slot
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/uiowa-gym

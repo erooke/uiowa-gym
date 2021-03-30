@@ -1,0 +1,111 @@
+#! /bin/env python
+import os
+from configparser import ConfigParser
+from pathlib import Path
+from time import sleep
+
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from xdg.BaseDirectory import xdg_config_home
+
+
+def main():
+
+    # Load in the config file
+
+    config = ConfigParser()
+    config_dir = Path(xdg_config_home) / "uiowa-gym"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config_file = config_dir / "config.ini"
+
+    if not config_file.exists():
+        config["login"] = {
+            "user": "hawkid",
+            "password": "a password",
+        }
+
+        with config_file.open("w") as new_config:
+            config.write(new_config)
+
+        print("No config file found, default written to " + str(config_file))
+        print("Please configure before running")
+        return
+
+    config.read(config_file)
+
+    # Initialize the driver
+
+    options = Options()
+    options.headless = True
+    driver = webdriver.Firefox(options=options, service_log_path=os.path.devnull)
+    driver.implicitly_wait(10)
+
+    # Reserve your gym time
+
+    try:
+        login(driver, config["login"]["user"], config["login"]["password"])
+        get_schedule(driver)
+        select_day(driver)
+        reserve_time(driver)
+    finally:
+        driver.close()
+
+
+def reserve_time(driver):
+    """
+    Actually reserve the time, (11 AM - 12:30 PM)
+    """
+    elements = driver.find_elements_by_class_name("booking-slot-item")
+    for element in elements:
+        time = element.find_element_by_tag_name("strong").text
+        if "11 AM - 12:30 PM" in time:
+            element.find_element_by_tag_name('button').click()
+            break
+
+
+def select_day(driver):
+    """
+    Select a day (MWF) to schedule
+    """
+    elements = driver.find_elements_by_class_name("single-date-select-button")
+    for element in elements:
+        week_day = element.find_element_by_class_name(
+            "single-date-select-button-day"
+        ).text
+        if "Mon" in week_day or "Wed" in week_day or "Fri" in week_day:
+            element.click()
+
+
+def get_schedule(driver):
+    """
+    Navigate to the CRWC scheduling page
+    """
+    # This relies on the CRWC being the first slot
+    element = driver.find_element_by_class_name("container-link-text-item")
+    link = element.find_element_by_xpath("..")
+    link.click()
+
+
+def login(driver, username, password):
+    """
+    Given a username and password, log into the booking system
+    """
+    driver.get("https://connect.recserv.uiowa.edu/booking")
+    driver.execute_script("showLogin('/booking')")
+    sleep(1)  # There might be a better way to do this
+    driver.execute_script("submitExternalLoginForm('Shibboleth')")
+    element = driver.find_element_by_name("j_username")
+    element.send_keys(username)
+    element = driver.find_element_by_name("j_password")
+    element.send_keys(password)
+    element = driver.find_element_by_id("login")
+    element.click()
+
+    # If Shibboleth doesn't let us in we should report that
+    errors = driver.find_elements_by_class_name("login-error")
+    if errors:
+        raise RuntimeError("Login failed")
+
+
+if __name__ == "__main__":
+    main()
