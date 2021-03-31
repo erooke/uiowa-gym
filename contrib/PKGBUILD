@@ -1,6 +1,7 @@
 # Maintainer: Ethan Rooke <ethan@roo.ke>
-pkgname=uiowa-gym
-pkgver=0.0.1
+pkgname=uiowa-gym-git
+_pkgname=uiowa-gym
+pkgver=r3.5917a70
 pkgrel=1
 epoch=
 pkgdesc="Automatic registartion of time slots at the uiowa gym"
@@ -12,27 +13,27 @@ depends=("geckodriver"
   "python-selenium"
   "python-pyxdg"
   )
-makedepends=()
+makedepends=(git)
 checkdepends=()
 optdepends=()
-provides=()
-conflicts=()
+provides=(uiowa-gym)
+conflicts=(uiowa-gym)
 replaces=()
 backup=()
 options=()
 install=
 changelog=
-source=("makefile" 
-  "uiowa_gym.service"
-  "uiowa_gym.timer"
-  "$pkgname")
+source=('uiowa-gym::git+ssh://git@github.com/erooke/uiowa-gym.git')
 noextract=()
-md5sums=("295849935474da0ce66b867312f926be"
-  "8a2bca2236ee1997fb977c1dfdc1d4a6"
-  "9a003777990c9b7e372993c1b49524c2"
-  "ff1f883392ba7f4edce9ad5dab71af30")
+md5sums=('SKIP')
 validpgpkeys=()
 
+pkgver(){
+  cd "$srcdir/$_pkgname"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
 package() {
+  cd "$srcdir/$_pkgname"
 	make DESTDIR="$pkgdir/" install
 }
