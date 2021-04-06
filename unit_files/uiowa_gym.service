@@ -1,6 +1,10 @@
 [Unit]
 Description=Automatically register for a gym slot
+StartLimitBurst=12
+StartLimitIntervalSec=6hours
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/bin/uiowa-gym
+Restart=on-failure
+RestartSec=30min
