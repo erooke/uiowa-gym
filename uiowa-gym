@@ -59,7 +59,9 @@ def reserve_time(driver):
     for element in elements:
         time = element.find_element_by_tag_name("strong").text
         if "11 AM - 12:30 PM" in time:
-            element.find_element_by_tag_name('button').click()
+            # I don't care if the button is visible, click it
+            button = element.find_element_by_tag_name('button')
+            driver.execute_script("arguments[0].click();", button)
             break
 
 
