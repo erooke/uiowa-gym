@@ -2,11 +2,14 @@
 import os
 from configparser import ConfigParser
 from pathlib import Path
-from time import sleep
+from time import sleep, time
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from xdg.BaseDirectory import xdg_config_home
+
+TIME_SLOT = "11 AM - 12:30 PM"
+DAYS = ["Mon", "Wed", "Fri"]
 
 
 def main():
@@ -38,7 +41,7 @@ def main():
     options = Options()
     options.headless = True
     driver = webdriver.Firefox(options=options, service_log_path=os.path.devnull)
-    driver.implicitly_wait(10)
+    driver.implicitly_wait(2)
 
     # Reserve your gym time
 
@@ -51,6 +54,20 @@ def main():
         driver.close()
 
 
+def confirm_reservation(driver):
+    """
+    Make sure that the Booking Succesful! banner pops up
+    """
+    # The element is always present on the page, so we need our own waiting logic
+    booking_success = driver.find_element_by_id("alertBookingSuccess")
+    start = time()
+    while time() - start < 2:
+        if booking_success.is_displayed():
+            return
+
+    raise RuntimeError("Failed to Book")
+
+
 def reserve_time(driver):
     """
     Actually reserve the time, (11 AM - 12:30 PM)
@@ -58,11 +75,24 @@ def reserve_time(driver):
     elements = driver.find_elements_by_class_name("booking-slot-item")
     for element in elements:
         time = element.find_element_by_tag_name("strong").text
-        if "11 AM - 12:30 PM" in time:
+
+        if TIME_SLOT in time:
+            button = element.find_element_by_tag_name("button")
+            status = button.text
+
+            if "Unavailable" in status:
+                raise RuntimeError("The desired time slot is unaivalable")
+
+            if "Booked" in status:
+                # we already have the time slot
+                return
+
             # I don't care if the button is visible, click it
-            button = element.find_element_by_tag_name('button')
             driver.execute_script("arguments[0].click();", button)
-            break
+            confirm_reservation(driver)
+            return
+
+    raise RuntimeError("Couldn't find the desired time slot")
 
 
 def select_day(driver):
@@ -74,8 +104,10 @@ def select_day(driver):
         week_day = element.find_element_by_class_name(
             "single-date-select-button-day"
         ).text
-        if "Mon" in week_day or "Wed" in week_day or "Fri" in week_day:
+        if any(day in week_day for day in DAYS):
             element.click()
+            return
+    raise RuntimeError("No suitable day found")
 
 
 def get_schedule(driver):
