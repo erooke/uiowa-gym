@@ -1,3 +1,5 @@
+As the gym no longer requires registration this is now read only
+
 # Automatic registration for gym slots at uiowa
 
 To install `sudo make install` will put everything in the right place.
@@ -10,7 +12,3 @@ Once installed:
 
 This will write a config file to `$XDG_CONFIG_HOME/uiowa-gym/config.ini` where you can put your
 authentication information.
-
-Todo (maybe):
-  - Allow the schedule to be configured
-  - Don't do plaintext passwords?

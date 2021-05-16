@@ -2,7 +2,7 @@
 Description=Automatically grab gym slots on Sunday, Tuesday, Thursday
 
 [Timer]
-OnCalendar=Sun,Tue,Thu 05:00
+OnCalendar=*-*-* 05:00:00
 Persistent=true
 Unit=uiowa_gym.service
 
